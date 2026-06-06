@@ -1,0 +1,1629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="https://cdn.jsdelivr.net/npm/vega@6.2.0"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-lite@6.4.1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-embed@7.1.0"></script>
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Data Visualisation — Group 15</title>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=UnifrakturMaguntia&display=swap');
+
+    :root {
+      --bg: #f7f7f5;
+      --text: #111111;
+      --muted: #6a6a6a;
+      --line: #dedede;
+      --accent: #c8102e;
+      --nba: #d7d7d7;
+      --wnba: #494e9e;
+      --article-width: 720px;
+      /* Unified font stacks */
+      --font-serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
+      --font-ui: Arial, Helvetica, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: Georgia, 'Times New Roman', serif; color: var(--text); background: var(--bg); font-size: 17px; }
+    img { max-width: 100%; display: block; }
+    a { color: inherit; text-decoration: none; }
+
+    /* ── NYT-style Header ── */
+    .site-header {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      height: 100vh;
+      min-height: 520px;
+      background: #000;
+      font-family: Georgia, 'Times New Roman', serif;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .site-nav {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      z-index: 10;
+    }
+
+    .nav-icons { display: flex; gap: 18px; }
+    .nav-icons svg { width: 20px; height: 20px; stroke: #fff; fill: none; stroke-width: 1.8; }
+
+    .masthead {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #fff;
+      font-family: 'UnifrakturMaguntia', 'Playfair Display', serif;
+      font-size: 22px;
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+      z-index: 10;
+    }
+
+    .nav-account {
+      color: #fff;
+      font-family: Arial, sans-serif;
+      font-size: 13px;
+      letter-spacing: 0.04em;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .header-left-panel {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;    
+      align-items: center;        
+      text-align: center;         
+      padding: 48px;
+      position: relative;
+    }
+
+    .section-label {
+      color: #D0393B;
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .article-type {
+      color: #fff;
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+
+    .header-divider {
+      width: 32px;
+      height: 1px;
+      background: #555;
+      margin-bottom: 20px;
+    }
+
+    .header-headline {
+      color: #fff;
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(36px, 4vw, 60px);
+      font-weight: 900;
+      line-height: 1.1;
+      letter-spacing: -0.01em;
+    }
+
+    .header-right-panel {
+      background: #1a1a1a;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    /* ── Article ── */
+    .article-shell {
+      background: var(--bg);
+      padding: 52px 24px 100px;
+    }
+
+    .article-meta,
+    .article-body {
+      width: min(var(--article-width), calc(100vw - 48px));
+      margin: 0 auto;
+    }
+
+    .article-meta {
+      padding-top: 24px;
+      border-top: 1px solid var(--line);
+      font-family: var(--font-ui);
+      color: #222;
+    }
+
+    .article-meta .author {
+      font-family: var(--font-ui);
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 1.5;
+    }
+
+    .article-meta .byline-note {
+      font-family: var(--font-ui);
+      font-size: 14px;
+      color: var(--muted);
+      margin-top: 4px;
+      line-height: 1.45;
+    }
+
+    .article-meta .author span { text-decoration: underline; }
+
+    .article-meta .date {
+      margin-top: 10px;
+      font-family: var(--font-ui);
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding: 20px 0 26px;
+      border-top: 1px solid var(--line);
+      margin-top: 12px;
+    }
+
+    .toolbar-btn {
+      font-family: var(--font-ui);
+      border: 1px solid #cccccc;
+      border-radius: 999px;
+      background: white;
+      padding: 9px 16px;
+      font-size: 13px;
+      color: #222;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .toolbar-btn:hover { background: #f0f0f0; }
+    .toolbar-btn.active { background: #111; color: #fff; border-color: #111; }
+
+    .share-item {
+      padding: 10px 18px;
+      cursor: pointer;
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+      color: #222;
+    }
+    .share-item:hover { background: #f5f5f5; }
+
+    .article-body {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 17px;
+      line-height: 1.65;
+      color: var(--text);
+    }
+
+    .article-body p { margin: 0 0 16px; }
+
+    .article-body .lede {
+      font-size: 21px;
+      line-height: 1.5;
+      color: #1a1a1a;
+      margin-bottom: 20px;
+    }
+
+    .article-body a { color: #2f6690; text-decoration: underline; }
+
+    .section-divider {
+      width: min(var(--article-width), calc(100vw - 48px));
+      margin: 36px auto;
+      height: 1px;
+      background: var(--line);
+    }
+
+    @media (max-width: 720px) {
+      .header-left-panel { padding: 80px 28px 40px; }
+    }
+
+    /* ── Menu Drawer ── */
+    .nav-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 100;
+    }
+    .nav-overlay.open { display: block; }
+
+    .menu-drawer {
+      position: fixed; top: 0; left: 0; width: 280px; height: 100vh;
+      background: #111; z-index: 101; transform: translateX(-100%);
+      transition: transform 0.28s cubic-bezier(.4,0,.2,1);
+      display: flex; flex-direction: column;
+    }
+    .menu-drawer.open { transform: translateX(0); }
+
+    .drawer-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px; border-bottom: 1px solid #2a2a2a;
+    }
+    .drawer-close {
+      background: none; border: none; color: #aaa; font-size: 18px;
+      cursor: pointer; line-height: 1; padding: 4px;
+    }
+    .drawer-close:hover { color: #fff; }
+
+    .drawer-nav { display: flex; flex-direction: column; padding: 12px 0; overflow-y: auto; }
+    .drawer-link {
+      font-family: Arial, sans-serif; font-size: 15px; color: #ccc;
+      padding: 13px 24px; text-decoration: none; border-bottom: 1px solid #1e1e1e;
+      transition: background 0.12s, color 0.12s;
+    }
+    .drawer-link:hover { background: #1e1e1e; color: #fff; }
+    .drawer-link.active { color: #fff; font-weight: 700; border-left: 3px solid #D0393B; padding-left: 21px; }
+
+    /* ── Search Overlay ── */
+    .search-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(5,5,5,0.96);
+      z-index: 200; align-items: center; justify-content: center;
+    }
+    .search-overlay.open { display: flex; }
+
+    .search-close {
+      position: absolute; top: 20px; right: 24px;
+      background: none; border: none; color: #aaa; font-size: 22px; cursor: pointer;
+    }
+    .search-close:hover { color: #fff; }
+
+    .search-inner { width: min(560px, 90vw); }
+
+    .search-box {
+      display: flex; align-items: center; gap: 12px;
+      border-bottom: 2px solid #fff; padding-bottom: 10px; margin-bottom: 14px;
+    }
+    .search-input {
+      flex: 1; background: none; border: none; outline: none;
+      font-family: 'Playfair Display', Georgia, serif; font-size: 28px;
+      color: #fff; caret-color: #fff;
+    }
+    .search-input::placeholder { color: #444; }
+    .search-hint { font-family: Arial, sans-serif; font-size: 13px; color: #555; }
+
+    /* ── Account Dropdown ── */
+    .nav-account { position: relative; }
+    .account-dropdown {
+      display: none; position: absolute; top: calc(100% + 10px); right: 0;
+      background: #1a1a1a; border: 1px solid #333; border-radius: 4px;
+      min-width: 200px; z-index: 50; overflow: hidden;
+    }
+    .nav-account.open .account-dropdown { display: block; }
+    .account-item {
+      font-family: Arial, sans-serif; font-size: 14px; color: #ccc;
+      padding: 12px 18px; cursor: pointer; border-bottom: 1px solid #2a2a2a;
+      transition: background 0.1s;
+    }
+    .account-item:last-child { border-bottom: none; }
+    .account-item:hover { background: #2a2a2a; color: #fff; }
+    /* ── Interactive salary-by-team chart ── */
+    .team-salary { font-family: Arial, Helvetica, sans-serif; width: 100%; margin: 0 auto; }
+    .team-salary .ts-picker {
+      position: relative; display: inline-flex; align-items: center;
+      border: 1.5px solid var(--line); background: #fafafa; border-radius: 10px;
+      padding: 0 12px 0 14px; margin: 8px 0 16px;
+      transition: border-color .15s ease, box-shadow .15s ease;
+    }
+    .team-salary .ts-picker:hover { border-color: #c4c4c4; }
+    .team-salary .ts-picker:focus-within { border-color: #999; box-shadow: 0 2px 10px rgba(0,0,0,.08); }
+    .team-salary select {
+      appearance: none; -webkit-appearance: none; border: none; background: transparent;
+      font-family: inherit; font-size: 15px; font-weight: 650; color: var(--text);
+      padding: 10px 24px 10px 0; cursor: pointer; outline: none;
+    }
+    .team-salary .ts-caret { position: absolute; right: 12px; color: var(--muted); font-size: 12px; pointer-events: none; }
+    .team-salary .ts-legend { display: flex; gap: 18px; align-items: center; font-size: 13px; color: var(--muted); margin: 0 0 10px 2px; }
+    .team-salary .ts-legend .sw { display: inline-flex; align-items: center; gap: 7px; }
+    .team-salary .ts-legend i { width: 22px; height: 12px; border-radius: 2px; display: inline-block; }
+    .team-salary .ts-err { color: #b00020; font-size: 14px; }
+    .team-salary .vega-embed .vega-actions, .team-salary .vega-embed summary { display: none !important; }
+
+    /* ── Rookie contract scale (100-square grid) ── */
+    .rcs { width: 100%; margin: 0 auto; font-family: Helvetica, Arial, sans-serif; }
+    .rcs .rcs-title { font-size: 18px; font-weight: 700; line-height: 1.4; color: #111; margin: 0 0 6px; }
+    .rcs .rcs-dek   { font-size: 14px; color: var(--muted); line-height: 1.5; margin: 0 0 16px; }
+
+    svg.rcs-grid { width: 100%; max-width: 460px; height: auto; display: block; margin: 0 auto; overflow: visible; }
+
+    .rcs .tile {
+      fill: var(--nba); stroke: #fff; stroke-width: 2.5;
+      opacity: 0; transform-box: fill-box; transform-origin: center; transform: scale(0.4);
+    }
+    .rcs .tile.show {
+      opacity: 1; transform: scale(1);
+      transition: opacity .32s ease, transform .32s cubic-bezier(.2,.7,.3,1.2);
+    }
+    .rcs .tile:hover { fill: #c4c4c4; }
+
+    .rcs .clark-fill { fill: var(--wnba); opacity: 0; }
+    .rcs .clark-fill.show { opacity: 1; transition: opacity .5s ease .1s; }
+    .rcs .clark-outline { fill: none; stroke: var(--wnba); stroke-width: 2.5; opacity: 0; }
+    .rcs .clark-outline.show { opacity: 1; transition: opacity .4s ease; }
+
+    .rcs .anno-line { stroke: var(--wnba); stroke-width: 1.5; opacity: 0; stroke-dasharray: 60; stroke-dashoffset: 60; }
+    .rcs .anno-line.show { opacity: 1; stroke-dashoffset: 0; transition: stroke-dashoffset .5s ease .2s, opacity .3s ease .2s; }
+
+    .rcs .lbl-nba   { font: 700 16px Helvetica, Arial, sans-serif; fill: #555; }
+    .rcs .lbl-wnba  { font: 700 16px Helvetica, Arial, sans-serif; fill: var(--wnba); }
+    .rcs .lbl-sub   { font: 400 12.5px Helvetica, Arial, sans-serif; fill: var(--muted); }
+    .rcs .lbl-unit  { font: 400 11px Helvetica, Arial, sans-serif; fill: var(--muted); }
+    .rcs .lbl { opacity: 0; transition: opacity .5s ease; }
+    .rcs .lbl.show { opacity: 1; }
+
+    .rcs-controls { text-align: center; margin: 0 0 16px; }
+    .rcs-note { font-size: 14px; color: #111; font-weight: 700; margin-top: 10px; }
+    .rcs-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; flex-wrap: wrap; }
+    .rcs-source { font-size: 12.5px; color: var(--muted); line-height: 1.5; }
+    .rcs-replay {
+      font-size: 13px; padding: 8px 14px; border: 1px solid #ccc; border-radius: 999px;
+      background: #fff; cursor: pointer; color: #333; transition: background .15s;
+    }
+    .rcs-replay:hover { background: #f0f0f0; }
+
+  </style>
+</head>
+
+<body>
+
+  <!-- ── NYT-style Header ── -->
+  <header class="site-header">
+
+    <nav class="site-nav">
+      <div class="nav-icons">
+        <svg id="btn-menu" viewBox="0 0 24 24" style="cursor:pointer"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        <svg id="btn-search" viewBox="0 0 24 24" style="cursor:pointer"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="22" y2="22"/></svg>
+      </div>
+      <div class="masthead">The Leuven Times</div>
+      <div class="nav-account" id="btn-account" style="cursor:pointer">Account ▾
+        <div class="account-dropdown" id="account-dropdown">
+          <div class="account-item" onclick="window.open('https://www.youtube.com/watch?v=dQw4w9WgXcQ','_blank')">My Account</div>
+          <div class="account-item" onclick="window.open('https://www.youtube.com/watch?v=dQw4w9WgXcQ','_blank')">Manage Subscription</div>
+          <div class="account-item" onclick="window.open('https://www.youtube.com/watch?v=dQw4w9WgXcQ','_blank')">Log Out</div>
+        </div>
+      </div>
+    </nav>
+
+  <!-- ── Menu Drawer ── -->
+  <div id="menu-overlay" class="nav-overlay"></div>
+  <aside id="menu-drawer" class="menu-drawer">
+    <div class="drawer-header">
+      <span style="font-family:'UnifrakturMaguntia',serif;font-size:18px;color:#fff;">The Leuven Times</span>
+      <button id="btn-menu-close" class="drawer-close">✕</button>
+    </div>
+    <nav class="drawer-nav">
+      <a class="drawer-link" href="https://www.youtube.com/watch?v=dQw4w9WgXcQ" target="_blank">Home</a>
+      <a class="drawer-link" href="https://www.youtube.com/watch?v=dQw4w9WgXcQ" target="_blank">Belgium</a>
+      <a class="drawer-link" href="https://www.youtube.com/watch?v=dQw4w9WgXcQ" target="_blank">World</a>
+      <a class="drawer-link" href="https://www.youtube.com/watch?v=dQw4w9WgXcQ" target="_blank">Business</a>
+      <a class="drawer-link" href="https://www.youtube.com/watch?v=dQw4w9WgXcQ" target="_blank">Opinion</a>
+      <a class="drawer-link active" href="https://www.youtube.com/watch?v=dQw4w9WgXcQ" target="_blank">Sports</a>
+      <a class="drawer-link" href="https://www.youtube.com/watch?v=dQw4w9WgXcQ" target="_blank">Arts</a>
+      <a class="drawer-link" href="https://www.youtube.com/watch?v=dQw4w9WgXcQ" target="_blank">Science</a>
+    </nav>
+  </aside>
+
+  <!-- ── Search Overlay ── -->
+  <div id="search-overlay" class="search-overlay">
+    <button id="btn-search-close" class="search-close">✕</button>
+    <div class="search-inner">
+      <label style="font-family:Arial,sans-serif;font-size:12px;color:#aaa;letter-spacing:0.1em;text-transform:uppercase;display:block;margin-bottom:10px;">Search The Leuven Times</label>
+      <div class="search-box">
+        <svg viewBox="0 0 24 24" width="18" height="18" stroke="#888" fill="none" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="22" y2="22"/></svg>
+        <input id="search-input" class="search-input" type="text" placeholder="Search articles…" autocomplete="off" />
+      </div>
+      <p class="search-hint">Try: "WNBA salary", "Caitlin Clark", "pay gap"</p>
+    </div>
+  </div>
+
+    <div class="header-left-panel">
+      <div class="section-label">Opinion</div>
+      <div class="article-type">University Essay</div>
+      <div class="header-divider"></div>
+      <h1 class="header-headline">What W.N.B.A. Players Would Earn Under a Fairer System</h1>
+    </div>
+
+    <div class="header-right-panel" style="height:100vh; overflow:hidden;">
+        <img 
+          src="Images/240513-caitlin-clark-indiana-fever-mn-1525-4dba6e copy.jpg"
+          style="
+            width:100%;
+            height:100%;
+            object-fit:cover;
+            object-position:65% center;
+            display:block;
+            margin:0;
+            padding:0"
+          >
+    </div>
+
+  </header>
+
+  <!-- ── Article ── -->
+  <main class="article-shell">
+
+    <!-- Meta: byline, date, toolbar -->
+    <section class="article-meta">
+      <div class="author">By Duc Anh Pham, Yueli Ni, Tiantian Quin, Xiao Zheng, Liu Luvin</div>
+      <div class="byline-note">A project by Group 15 - Data Visualisation Course - KU Leuven</div>
+      <div class="date">Oct. 3, 2025</div>
+      <div class="toolbar" style="position:relative;">
+        <button class="toolbar-btn" id="btn-share">Share full article</button>
+        <button class="toolbar-btn icon-btn" id="btn-bookmark">Save</button>
+        <button class="toolbar-btn" id="btn-comments">🗨 Comment</button>
+        <div id="share-dropdown" style="display:none; position:absolute; top:48px; left:0; background:#fff; border:1px solid #ddd; border-radius:8px; padding:8px 0; min-width:220px; box-shadow:0 4px 16px rgba(0,0,0,0.12); z-index:100;">
+          <div class="share-item" onclick="navigator.clipboard.writeText(location.href);this.textContent='✓ Copied!';setTimeout(()=>this.textContent='🔗 Copy link',2000)">🔗 Copy link</div>
+          <div class="share-item" onclick="location.href='mailto:?subject='+encodeURIComponent(document.title)+'&body='+encodeURIComponent(location.href)">✉️ Email</div>
+          <div class="share-item" onclick="window.open('https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href))">📘 Facebook</div>
+          <div class="share-item" onclick="window.open('https://twitter.com/intent/tweet?url='+encodeURIComponent(location.href))">🐦 X (Twitter)</div>
+          <div class="share-item" onclick="window.open('https://wa.me/?text='+encodeURIComponent(location.href))">💬 WhatsApp</div>
+        </div>
+      </div>
+    </section>
+ 
+    <!-- Body paragraphs -->
+    <section class="article-body">
+      <p>
+        It is no secret that the WNBA is bringing in less revenue compared to its senior counterpart, the NBA. 
+        Recent years however have seen a significant rise in interest of the public towards the women’s league and hence yielded also a proportional positive return financially. 
+        The league is sure to reap the results from this positive influx while the players are not. In a leading and role model such as the WNBA, its players are still being cast on the side line and their financial rewards are so as such.
+      </p>
+
+      <p>
+        In 2024, Caitlin Clark arrived in the WNBA as one of the most anticipated prospects in the history of women's basketball. The former Iowa star shattered viewership records, sold out arenas across the country, and became the face of a new era for the league. As the No. 1 overall pick in the WNBA Draft, Clark signed a four-year rookie contract worth approximately $338,000. But just months earlier, Zaccharie Risacher was selected first overall in the NBA Draft. His four-year rookie contract was valued at approximately $57.1 million.
+      </p>
+
+      <p>
+        The difference is difficult to comprehend in absolute terms. Risacher's rookie deal is around 169 times larger than Clark's. Put another way, Clark's entire four-year contract represents just a fractional 0.0059% of Risacher's rookie earnings.
+      </p>
+
+      <!-- Rookie contract scale (100-square grid) -->
+      <section class="rcs" id="rcs">
+        <p class="rcs-title">Rookie contract scale</p>
+        <p class="rcs-dek">
+          Four-year rookie contract value for the two 2024 No. 1 picks. Each square is
+          one-hundredth of Risacher's deal — about $571,000.
+        </p>
+
+        <div class="rcs-controls"><button class="rcs-replay" id="rcsReplay">Replay</button></div>
+
+        <svg class="rcs-grid" id="grid" viewBox="0 0 600 622" xmlns="http://www.w3.org/2000/svg"
+             aria-label="A grid of 100 squares for Risacher's $57.1M deal; Clark's $338K deal is 59% of one square in the corner."></svg>
+
+        <div class="rcs-foot">
+          <p class="rcs-source">Sources: Spotrac WNBA, Spotrac NBA</p>
+        </div>
+      </section>
+
+      <p>
+        The gap is not a reflection of individual talent or draft status, both players entered their respective leagues as the most sought-after prospects of their class. Instead, it reflects the vastly different economic structures that govern player compensation in the NBA and WNBA.
+      </p>
+
+      <p>
+        As striking as the comparison is, it only tells part of the story. The disparity extends beyond star rookies and can be observed across the leagues as a whole, where even the typical NBA player earns substantially more than their WNBA counterpart.
+      </p>
+
+    <!-- Animated salary chart -->
+    <div>
+      <p>
+        Caitlin Clark’s case is not just isolated but can be seen across the league, on average female basketball athletes make 10 or 20 times less than their peers in the NBA (source).
+      </p>
+
+      <p>
+        The gap between WNBA and NBA salaries becomes even more striking when viewed through the lens of time.
+      </p>
+
+      <p>
+        In 2025, the median WNBA player earns a base salary of $72,455, compared with a roughly $6.7 million paycheck for the median NBA player in the 2024–25 season. Yet players in both leagues spend a similar amount of time on the court, with median playing times of 17.8 and 19.1 minutes per game, respectively.
+      </p>
+
+      <p>
+        When salaries are translated into game time, the difference is stark. A median WNBA player needs approximately 1 minute and 29 seconds of playing time to earn $100. A median NBA player reaches the same amount in just 1.74 seconds. This is illustrated below.
+      </p>
+    </div>
+
+    <div style="width:100%; max-width:720px; margin:0 auto;">
+      <p style="font-family: Helvetica;font-size: 18px; font-weight: 700; color: #111; line-height: 1.4; margin-bottom: 16px;">
+        It takes a W.N.B.A. player significantly longer to earn $100 compared to that of a N.B.A. player.
+      </p>
+    </div>
+
+    <div style="width:100%; max-width:720px; margin:0 auto;">
+      <div style="text-align:center; margin: 8px 0 0;">
+        <button 
+        id="replay-btn" 
+        style="font-family:Helvetica; font-size:13px; padding:8px 12px; border:1px solid #ccc; border-radius:999px; background:white; cursor:pointer; color:#333; display:none;">Replay
+        </button>
+      </div>
+
+      <div id="salary-timer-chart"></div>
+
+      <p style="font-family:Helvetica; font-size:13px; color:#666; margin-top:8px; line-height:1.5;">
+        Sources: Spotrac WNBA, Spotrac NBA
+      </p>
+    </div>
+
+    <!-- Revenue distribution chart -->
+    <div style="width: 100%; margin: 0 auto; font-family: Helvetica;">
+
+        <!-- Title -->
+        <p style="font-size: 18px; font-weight: 700; color: #111; line-height: 1.4; margin-bottom: 16px;">
+            Players get a tiny cut of the W.N.B.A.'s revenue, even as the league has grown significantly
+        </p>
+
+        <!-- Vega chart -->
+        <div id="WNBA-salary-distribution" style="width: 100%;"></div>
+
+        <!-- Source -->
+        <p style="font-family:Helvetica; font-size:13px; color:#666; margin-top:8px; line-height:1.5;">
+            Sources: Bloomberg, Forbes, Sportico, Rodney Fort's Sports Business Data
+        </p>
+
+    </div>
+
+    <!-- Actual vs adjusted salary jump -->
+    <div style="width: 100%; margin: 0 auto; font-family: Helvetica;">
+
+      <!-- Title -->
+      <p style="font-size: 18px; font-weight: 700; color: #111; line-height: 1.4; margin-bottom: 16px;">
+        How A Revenue Sharing System Similar to the N.B.A Would Transform WNBA Pay
+      </p>
+
+      <!-- Vega chart -->
+      <div id="salary-jump-chart" style="width: 100%;"></div>
+
+      <!-- Source -->
+      <p style="font-family:Helvetica; font-size:13px; color:#666; margin-top:8px; line-height:1.5;">
+        Sources: Bloomberg, Forbes, Sportico, Rodney Fort's Sports Business Data
+      </p>
+    </div>
+
+    <!-- Interactive cap-allocation-chart-->
+    <div class="cap-allocation" style="width: 100%; margin: 0 auto; font-family: Helvetica;">
+      
+      <!-- Title -->
+      <p style="font-size: 18px; font-weight: 700; color: #111; line-height: 1.4; margin-bottom: 16px;">
+        Most teams already spend right up to the salary cap. A fairer, adjusted cap would roughly double every team's allocation.
+      </p>
+
+      <!-- Vega chart -->
+      <div id="cap-allocation-chart" style="width: 100%;"></div>
+
+      <!-- Source -->
+      <p style="font-family:Helvetica; font-size:13px; color:#666; margin-top:8px; line-height:1.5;">
+        Sources: Herhoopstats.
+      </p>
+    </div>
+
+    <!-- Interactive salary of players in a team (adjusted vs current) -->
+    <div class="team-salary">
+
+      <!-- Title -->
+      <p style="font-size: 18px; font-weight: 700; color: #111; line-height: 1.4; margin-bottom: 4px;">
+        Under a fairer salary cap, this is what players from each team would earn.
+      </p>
+      <p style="font-family:Helvetica; font-size:14px; color:#666; line-height:1.5; margin-bottom: 6px;">
+        Players are ranked from highest to lowest salary and the adjusted figure is a flat 2.2&times; multiple of listed salary.
+      </p>
+
+      <!-- Team picker -->
+      <div class="ts-picker">
+        <select id="teamSelect" aria-label="Choose a team"></select>
+        <span class="ts-caret">&#9662;</span>
+      </div>
+
+      <!-- Legend -->
+      <div class="ts-legend">
+        <span class="sw"><i style="background:#494e9e;"></i> Current salary</span>
+        <span class="sw"><i style="background:#b6bbf0;"></i> Adjusted salary</span>
+      </div>
+
+      <!-- Vega chart -->
+      <div id="team-salary-chart"></div>
+
+      <!-- Source -->
+      <p style="font-family:Helvetica; font-size:13px; color:#666; margin-top:8px; line-height:1.5;">
+        Source: Herhoopstats.
+      </p>
+    </div>
+
+    </section>
+
+    <div class="section-divider"></div>
+
+  </main>
+
+  <script>
+    /* ── Chart 1: time-to-earn-$100 donut (#salary-timer-chart) ── */
+    const timerEl = document.getElementById('salary-timer-chart');
+    const w = timerEl.offsetWidth;
+
+    const spec1 = {
+      "$schema": "https://vega.github.io/schema/vega/v6.json",
+      "width": 720, "height": 380, "background": null,
+      "signals": [
+        {"name": "startTime", "init": "now()"},
+        { "name": "elapsed", "value": 0, "on": [{ "events": {"type":"timer","throttle":40}, "update": "min((now()-startTime)/1000,64.96)" }] }
+      ],
+      "data": [{
+        "name": "leagues",
+        "values": [
+          { "league": "WNBA Median", "time": 64.96, "x": w*0.25, "color": "#9AAEFF" },
+          { "league": "NBA Median",  "time": 1.4,   "x": w*0.75, "color": "#D6D6D6" }
+        ],
+        "transform": [
+          { "type": "formula", "as": "progress", "expr": "min(elapsed/datum.time,1)" },
+          { "type": "formula", "as": "earned",   "expr": "datum.progress*100" }
+        ]
+      }],
+      "marks": [
+        { "type": "arc", "from": {"data":"leagues"}, "encode": { "enter": { "x":{"field":"x"}, "y":{"value":210}, "innerRadius":{"value":85}, "outerRadius":{"value":130}, "fill":{"value":"#eeeeee"} }, "update": { "startAngle":{"signal":"datum.progress>=1?6.282:datum.progress*6.28318"}, "endAngle":{"value":6.28318}, "opacity":{"signal":"datum.progress>=1?0:1"} } } },
+        { "type": "arc", "from": {"data":"leagues"}, "encode": { "enter": { "x":{"field":"x"}, "y":{"value":210}, "innerRadius":{"value":85}, "outerRadius":{"value":130}, "startAngle":{"value":0}, "fill":{"field":"color"} }, "update": { "endAngle":{"signal":"datum.progress>=1?6.282:datum.progress*6.28318"} } } },
+        { "type": "text", "from": {"data":"leagues"}, "encode": { "enter": { "x":{"field":"x"}, "y":{"value":60}, "text":{"field":"league"}, "align":{"value":"center"}, "font":{"value":"Arial"}, "fontSize":{"value":16}, "fontWeight":{"value":"bold"}, "fill":{"value":"black"} } } },
+        { "type": "text", "from": {"data":"leagues"}, "encode": { "update": { "x":{"field":"x"}, "y":{"value":220}, "text":{"signal":"'$'+format(datum.earned,'.1f')"}, "align":{"value":"center"}, "font":{"value":"Arial"}, "fontSize":{"value":28}, "fontWeight":{"value":"bold"}, "fill":{"value":"black"} } } }
+      ]
+    };
+
+    function embedChart() {
+      vegaEmbed('#salary-timer-chart', spec1, { mode: "vega", actions: false })
+        .then(() => { document.getElementById('replay-btn').style.display = 'inline-block'; })
+        .catch(console.error);
+    }
+
+    const chartObserver = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) { embedChart(); chartObserver.disconnect(); } });
+    }, { threshold: 0.3 });
+    chartObserver.observe(timerEl);
+    document.getElementById('replay-btn').addEventListener('click', embedChart);
+
+    /* ── Toolbar buttons ── */
+    const shareDropdown = document.getElementById('share-dropdown');
+
+    // Share — toggle dropdown
+    document.getElementById('btn-share').addEventListener('click', (e) => {
+      e.stopPropagation();
+      shareDropdown.style.display = shareDropdown.style.display === 'block' ? 'none' : 'block';
+    });
+    document.addEventListener('click', () => shareDropdown.style.display = 'none');
+
+    // Save — toggle
+    document.getElementById('btn-bookmark').addEventListener('click', () => {
+      const btn = document.getElementById('btn-bookmark');
+      const saved = btn.dataset.saved === 'true';
+      btn.dataset.saved = !saved;
+      btn.textContent = saved ? 'Save' : 'Saved ✓';
+      btn.style.background = saved ? '' : '#111';
+      btn.style.color = saved ? '' : '#fff';
+      btn.style.borderColor = saved ? '' : '#111';
+    });
+
+    // Comments — scroll down
+    document.getElementById('btn-comments').addEventListener('click', () => {
+      const target = document.getElementById('comments-anchor')
+        || document.querySelector('.section-divider');
+      target?.scrollIntoView({ behavior: 'smooth' });
+    });
+
+      /* ── Nav buttons ── */
+      const menuDrawer  = document.getElementById('menu-drawer');
+      const menuOverlay = document.getElementById('menu-overlay');
+
+      function openMenu()  { menuDrawer.classList.add('open'); menuOverlay.classList.add('open'); }
+      function closeMenu() { menuDrawer.classList.remove('open'); menuOverlay.classList.remove('open'); }
+
+      document.getElementById('btn-menu').addEventListener('click', openMenu);
+      document.getElementById('btn-menu-close').addEventListener('click', closeMenu);
+      menuOverlay.addEventListener('click', closeMenu);
+
+      const searchOverlay = document.getElementById('search-overlay');
+      document.getElementById('btn-search').addEventListener('click', () => {
+        searchOverlay.classList.add('open');
+        setTimeout(() => document.getElementById('search-input').focus(), 50);
+      });
+      document.getElementById('btn-search-close').addEventListener('click', () => searchOverlay.classList.remove('open'));
+      document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') { searchOverlay.classList.remove('open'); closeMenu(); }
+      });
+
+      document.getElementById('btn-account').addEventListener('click', (e) => {
+        e.stopPropagation();
+        document.getElementById('btn-account').classList.toggle('open');
+      });
+      document.addEventListener('click', () => document.getElementById('btn-account').classList.remove('open'));
+  </script>
+
+  <script>
+    /* ── Chart 2: revenue vs. player share over time (#WNBA-salary-distribution) ── */
+    document.addEventListener('DOMContentLoaded', () => {
+      const spec2 = {
+        "$schema": "https://vega.github.io/schema/vega/v6.json",
+        "width": 668,
+        "height": 380,
+        "signals": [
+          {
+            "name": "hoveryear",
+            "value": null,
+            "on": [
+              { "events": "@barRev:pointerover, @barAdj:pointerover, @barSal:pointerover", "update": "datum.year" },
+              { "events": "@barRev:pointerout, @barAdj:pointerout, @barSal:pointerout", "update": "null" }
+            ]
+          }
+        ],
+        "data": [
+          {
+            "name": "table",
+            "values": [
+              {"year": "2019", "Revenue": 101.7, "Adjusted": 50.85, "Salary": 9.46},
+              {"year": "2020", "Revenue": 120, "Adjusted": 60, "Salary": 11.16},
+              {"year": "2021", "Revenue": 150, "Adjusted": 75, "Salary": 13.95},
+              {"year": "2022", "Revenue": 170, "Adjusted": 85, "Salary": 15.81},
+              {"year": "2023", "Revenue": 200, "Adjusted": 100, "Salary": 18.6},
+              {"year": "2024", "Revenue": 226, "Adjusted": 113, "Salary": 21.02},
+              {"year": "2025", "Revenue": 300, "Adjusted": 150, "Salary": 27.9}
+            ]
+          },
+          {
+            "name": "legend",
+            "values": [
+              {
+                "label": "How much money the \n W.N.B.A. makes",
+                "color": "#c8c8c8",
+                "x": 0
+              },
+              {
+                "label": "Money the players would share, \n if they were paid like N.B.A. players",
+                "color": "#a4b5ff",
+                "x": 150
+              },
+              {
+                "label": "Money that W.N.B.A. players \n actually make",
+                "color": "#6173c3",
+                "x": 370
+              }
+            ]
+          }
+        ],
+        "scales": [
+          {
+            "name": "x",
+            "type": "band",
+            "domain": {"data": "table", "field": "year"},
+            "range": "width",
+            "padding": 0.3
+          },
+          {
+            "name": "y",
+            "type": "linear",
+            "domain": [0, 320],
+            "range": "height",
+            "zero": true,
+            "nice": false
+          }
+        ],
+        "axes": [
+          {
+            "orient": "bottom",
+            "scale": "x",
+            "ticks": false,
+            "domain": true,
+            "domainColor": "#666666",
+            "labelFont": "Helvetica",
+            "labelFontSize": 12,
+            "labelColor": "#666",
+            "labelPadding": 8,
+            "title": null
+          },
+          {
+            "orient": "left",
+            "scale": "y",
+            "ticks": false,
+            "domain": false,
+            "grid": false,
+            "labelFont": "Helvetica",
+            "labelFontSize": 12,
+            "labelColor": "#666",
+            "labelPadding": 6,
+            "labelAlign": "right",
+            "values": [50, 100, 150, 200, 250, 300],
+            "encode": {
+              "labels": {
+                "update": {
+                  "text": {
+                    "signal": "datum.value == 0 ? '' : '$' + datum.value + ' mil'"
+                  },
+                  "fill": {"value": "#666"},
+                  "font": {"value": "Helvetica"},
+                  "fontSize": {"value": 12}
+                }
+              }
+            },
+            "title": "ANNUAL REVENUE",
+            "titleAlign": "left",
+            "titleAngle": 0,
+            "titleX": -52,
+            "titleY": 0,
+            "titleFontSize": 14,
+            "titleFont": "Helvetica",
+            "titleColor": "#333"
+          }
+        ],
+        "marks": [
+          {
+            "type": "rect",
+            "name": "barRev",
+            "from": {"data": "table"},
+            "encode": {
+              "enter": {
+                "xc": {"signal": "scale('x', datum.year) + bandwidth('x') / 2"},
+                "width": {"value": 38},
+                "y": {"scale": "y", "field": "Revenue"},
+                "y2": {"scale": "y", "value": 0},
+                "fill": {"value": "#c8c8c8"},
+                "tooltip": {
+                  "signal": "{'Year': datum.year, 'Total revenue': datum.Revenue + 'M', 'NBA-equivalent Salary': datum.Adjusted + 'M', 'Actual salary': datum.Salary + 'M'}"
+                }
+              },
+              "update": {
+                "opacity": {"signal": "hoveryear == null || datum.year == hoveryear ? 1 : 0.15"}
+              }
+            }
+          },
+          {
+            "type": "rect",
+            "name": "barAdj",
+            "from": {"data": "table"},
+            "encode": {
+              "enter": {
+                "xc": {"signal": "scale('x', datum.year) + bandwidth('x') / 2"},
+                "width": {"value": 28},
+                "y": {"scale": "y", "field": "Adjusted"},
+                "y2": {"scale": "y", "value": 0},
+                "fill": {"value": "#a4b5ff"},
+                "tooltip": {
+                  "signal": "{'Year': datum.year, 'Total revenue': datum.Revenue + 'M', 'NBA-equivalent Salary': datum.Adjusted + 'M', 'Actual salary': datum.Salary + 'M'}"
+                }
+              },
+              "update": {
+                "opacity": {"signal": "hoveryear == null || datum.year == hoveryear ? 1 : 0.15"}
+              }
+            }
+          },
+          {
+            "type": "rect",
+            "name": "barSal",
+            "from": {"data": "table"},
+            "encode": {
+              "enter": {
+                "xc": {"signal": "scale('x', datum.year) + bandwidth('x') / 2"},
+                "width": {"value": 18},
+                "y": {"scale": "y", "field": "Salary"},
+                "y2": {"scale": "y", "value": 0},
+                "fill": {"value": "#6173c3"},
+                "tooltip": {
+                  "signal": "{'Year': datum.year, 'Total revenue': datum.Revenue + 'M', 'NBA-equivalent Salary': datum.Adjusted + 'M', 'Actual salary': datum.Salary + 'M'}"
+                }
+              },
+              "update": {
+                "opacity": {"signal": "hoveryear == null || datum.year == hoveryear ? 1 : 0.15"}
+              }
+            }
+          },
+          {
+            "type": "rect",
+            "from": {"data": "legend"},
+            "encode": {
+              "enter": {
+                "x": {"field": "x"},
+                "y": {"value": 410},
+                "width": {"value": 12},
+                "height": {"value": 12},
+                "fill": {"field": "color"}
+              }
+            }
+          },
+          {
+            "type": "text",
+            "from": {"data": "legend"},
+            "encode": {
+              "enter": {
+                "x": {"signal": "datum.x + 16"},
+                "y": {"value": 410},
+                "text": {"field": "label"},
+                "font": {"value": "Helvetica"},
+                "fontSize": {"value": 11},
+                "fill": {"value": "#444"},
+                "baseline": {"value": "top"},
+                "lineBreak": {"value": "\n"},
+                "lineHeight": {"value": 12}
+              }
+            }
+          }
+        ],
+        "config": {}
+      };
+          vegaEmbed("#WNBA-salary-distribution", spec2, {mode: "vega", actions: false}).then(console.log).catch(console.warn);
+  });
+  </script>
+
+  <script>
+    /* ── Chart 3: actual vs. adjusted salary range (#salary-jump-chart) ── */
+    document.addEventListener('DOMContentLoaded', () => {
+
+    const spec3 = {
+      "$schema": "https://vega.github.io/schema/vega/v6.json",
+      "width": 650,
+      "height": 380,
+      "background": "transparent",
+
+      "data": [
+        {
+          "name": "actual",
+          "values": [
+            {"year": "'19", "min": 41965,  "avg": 102751,  "max": 228094},
+            {"year": "'20", "min": 44040,  "avg": 109025,  "max": 185000},
+            {"year": "'21", "min": 57000,  "avg": 120648,  "max": 221450},
+            {"year": "'22", "min": 60000,  "avg": 128358,  "max": 234936},
+            {"year": "'23", "min": 62285,  "avg": 133015,  "max": 241984},
+            {"year": "'24", "min": 64154,  "avg": 146321,  "max": 249244},
+            {"year": "'25", "min": 66000,  "avg": 150000,  "max": 249244}
+          ]
+        },
+        {
+          "name": "adjusted",
+          "values": [
+            {"year": "'19", "min": 50000,  "avg": 500000,  "max": 1400000},
+            {"year": "'20", "min": 50000,  "avg": 600000,  "max": 1750000},
+            {"year": "'21", "min": 55000,  "avg": 700000,  "max": 2050000},
+            {"year": "'22", "min": 58000,  "avg": 800000,  "max": 2500000},
+            {"year": "'23", "min": 60000,  "avg": 900000,  "max": 2800000},
+            {"year": "'24", "min": 62000,  "avg": 1000000, "max": 3250000},
+            {"year": "'25", "min": 64000,  "avg": 1050000, "max": 4000000}
+          ]
+        }
+      ],
+
+      "scales": [
+        {
+          "name": "y",
+          "type": "linear",
+          "domain": [0, 4000000],
+          "range": "height"
+        },
+        {
+          "name": "xActual",
+          "type": "band",
+          "domain": {"data": "actual", "field": "year"},
+          "range": [0, 280],
+          "padding": 0.3
+        },
+        {
+          "name": "xAdjusted",
+          "type": "band",
+          "domain": {"data": "adjusted", "field": "year"},
+          "range": [340, 650],
+          "padding": 0.3
+        }
+      ],
+
+      "axes": [
+        {
+          "orient": "left",
+          "scale": "y",
+          "ticks": false,
+          "domain": false,
+          "grid": false,
+          "labelColor": "#888",
+          "labelFontSize": 11,
+          "title": null,
+          "encode": {
+            "labels": {
+              "update": {
+                "text": {
+                  "signal": "datum.value === 0 ? '' : datum.value >= 1000000 ? datum.value / 1000000 + ' million' : datum.value === 500000 ? '500k' : ''"
+                }
+              }
+            }
+          }
+        }
+      ],
+
+      "marks": [
+        {
+          "type": "text",
+          "encode": {
+            "enter": {
+              "x": {"value": 140},
+              "y": {"signal": "height + 30"},
+              "text": {"value": "Actual"},
+              "align": {"value": "center"},
+              "fill": {"value": "#aaa"},
+              "fontSize": {"value": 12}
+            }
+          }
+        },
+        {
+          "type": "text",
+          "encode": {
+            "enter": {
+              "x": {"value": 495},
+              "y": {"signal": "height + 30"},
+              "text": {"value": "Adjusted"},
+              "align": {"value": "center"},
+              "fill": {"value": "#aaa"},
+              "fontSize": {"value": 12}
+            }
+          }
+        },
+
+        {
+          "type": "rule",
+          "from": {"data": "actual"},
+          "encode": {
+            "enter": {
+              "x":  {"scale": "xActual", "field": "year", "band": 0.5},
+              "y":  {"scale": "y", "field": "max"},
+              "y2": {"scale": "y", "field": "min"},
+              "stroke": {"value": "#555"},
+              "strokeWidth": {"value": 1.5}
+            }
+          }
+        },
+        {
+          "type": "text",
+          "from": {"data": "actual"},
+          "encode": {
+            "enter": {
+              "x": {"scale": "xActual", "field": "year", "band": 0.5},
+              "y": {"signal": "height + 16"},
+              "text": {"field": "year"},
+              "align": {"value": "center"},
+              "fill": {"value": "#888"},
+              "fontSize": {"value": 11}
+            }
+          }
+        },
+        {
+          "type": "symbol",
+          "from": {"data": "actual"},
+          "encode": {
+            "enter": {
+              "x":    {"scale": "xActual", "field": "year", "band": 0.5},
+              "y":    {"scale": "y", "field": "max"},
+              "fill": {"value": "#9aaeff"},
+              "size": {"value": 80},
+              "tooltip": {
+                "signal": "{'Group': 'Actual', 'Year': datum.year, 'Max': '$' + format(datum.max, ','), 'Avg': '$' + format(datum.avg, ','), 'Min': '$' + format(datum.min, ',')}"
+              }
+            }
+          }
+        },
+        {
+          "type": "symbol",
+          "from": {"data": "actual"},
+          "encode": {
+            "enter": {
+              "x":    {"scale": "xActual", "field": "year", "band": 0.5},
+              "y":    {"scale": "y", "field": "avg"},
+              "fill": {"value": "#aaaaaa"},
+              "size": {"value": 80},
+              "tooltip": {
+                "signal": "{'Group': 'Actual', 'Year': datum.year, 'Max': '$' + format(datum.max, ','), 'Avg': '$' + format(datum.avg, ','), 'Min': '$' + format(datum.min, ',')}"
+              }
+            }
+          }
+        },
+        {
+          "type": "symbol",
+          "from": {"data": "actual"},
+          "encode": {
+            "enter": {
+              "x":    {"scale": "xActual", "field": "year", "band": 0.5},
+              "y":    {"scale": "y", "field": "min"},
+              "fill": {"value": "#b5cc3a"},
+              "size": {"value": 80},
+              "tooltip": {
+                "signal": "{'Group': 'Actual', 'Year': datum.year, 'Max': '$' + format(datum.max, ','), 'Avg': '$' + format(datum.avg, ','), 'Min': '$' + format(datum.min, ',')}"
+              }
+            }
+          }
+        },
+
+        {
+          "type": "rule",
+          "from": {"data": "adjusted"},
+          "encode": {
+            "enter": {
+              "x":  {"scale": "xAdjusted", "field": "year", "band": 0.5},
+              "y":  {"scale": "y", "field": "max"},
+              "y2": {"scale": "y", "field": "min"},
+              "stroke": {"value": "#555"},
+              "strokeWidth": {"value": 1.5}
+            }
+          }
+        },
+        {
+          "type": "text",
+          "from": {"data": "adjusted"},
+          "encode": {
+            "enter": {
+              "x": {"scale": "xAdjusted", "field": "year", "band": 0.5},
+              "y": {"signal": "height + 16"},
+              "text": {"field": "year"},
+              "align": {"value": "center"},
+              "fill": {"value": "#888"},
+              "fontSize": {"value": 11}
+            }
+          }
+        },
+        {
+          "type": "symbol",
+          "from": {"data": "adjusted"},
+          "encode": {
+            "enter": {
+              "x":    {"scale": "xAdjusted", "field": "year", "band": 0.5},
+              "y":    {"scale": "y", "field": "max"},
+              "fill": {"value": "#9aaeff"},
+              "size": {"value": 80},
+              "tooltip": {
+                "signal": "{'Group': 'Adjusted', 'Year': datum.year, 'Max': '$' + format(datum.max, ','), 'Avg': '$' + format(datum.avg, ','), 'Min': '$' + format(datum.min, ',')}"
+              }
+            }
+          }
+        },
+        {
+          "type": "symbol",
+          "from": {"data": "adjusted"},
+          "encode": {
+            "enter": {
+              "x":    {"scale": "xAdjusted", "field": "year", "band": 0.5},
+              "y":    {"scale": "y", "field": "avg"},
+              "fill": {"value": "#aaaaaa"},
+              "size": {"value": 80},
+              "tooltip": {
+                "signal": "{'Group': 'Adjusted', 'Year': datum.year, 'Max': '$' + format(datum.max, ','), 'Avg': '$' + format(datum.avg, ','), 'Min': '$' + format(datum.min, ',')}"
+              }
+            }
+          }
+        },
+        {
+          "type": "symbol",
+          "from": {"data": "adjusted"},
+          "encode": {
+            "enter": {
+              "x":    {"scale": "xAdjusted", "field": "year", "band": 0.5},
+              "y":    {"scale": "y", "field": "min"},
+              "fill": {"value": "#b5cc3a"},
+              "size": {"value": 80},
+              "tooltip": {
+                "signal": "{'Group': 'Adjusted', 'Year': datum.year, 'Max': '$' + format(datum.max, ','), 'Avg': '$' + format(datum.avg, ','), 'Min': '$' + format(datum.min, ',')}"
+              }
+            }
+          }
+        }
+      ],
+
+      "config": {
+        "view": {"stroke": null},
+        "axis": {"grid": false}
+      }
+    };
+
+    vegaEmbed('#salary-jump-chart', spec3, {actions: false});
+  });
+  </script>
+
+  <!-- Chart 4: per-team cap allocations (#cap-allocation-chart) -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const spec4 = {
+        "$schema": "https://vega.github.io/schema/vega/v6.json",
+        "width": 640,
+        "height": 400,
+        "background": "transparent",
+        "data": [
+          {
+            "name": "table",
+            "values": [
+              {"team": "LV",  "capAlloc": 1530746, "adjAlloc": 3367641},
+              {"team": "DAL", "capAlloc": 1518904, "adjAlloc": 3341589},
+              {"team": "MIN", "capAlloc": 1508049, "adjAlloc": 3317708},
+              {"team": "PHX", "capAlloc": 1506620, "adjAlloc": 3314564},
+              {"team": "ATL", "capAlloc": 1506483, "adjAlloc": 3314263},
+              {"team": "NY",  "capAlloc": 1504935, "adjAlloc": 3310857},
+              {"team": "IND", "capAlloc": 1491130, "adjAlloc": 3280486},
+              {"team": "LA",  "capAlloc": 1487034, "adjAlloc": 3271475},
+              {"team": "CHI", "capAlloc": 1479627, "adjAlloc": 3255179},
+              {"team": "SEA", "capAlloc": 1464680, "adjAlloc": 3222296},
+              {"team": "CON", "capAlloc": 1292753, "adjAlloc": 2844057},
+              {"team": "GS",  "capAlloc": 1287618, "adjAlloc": 2832760},
+              {"team": "WAS", "capAlloc": 1235882, "adjAlloc": 2718940}
+            ]
+          },
+          {
+            "name": "caps",
+            "values": [
+              {"cap": 1507100, "label": "Salary cap — $1,507,100", "color": "#c0392b"},
+              {"cap": 3014200, "label": "Adjusted cap — $3,014,200", "color": "#d68910"}
+            ]
+          },
+          {
+            "name": "legend",
+            "values": [
+              {"label": "Adjusted allocations",   "color": "#a4b5ff", "x": 0},
+              {"label": "Total cap allocations",   "color": "#6173c3", "x": 180}
+            ]
+          }
+        ],
+        "scales": [
+          {
+            "name": "x",
+            "type": "band",
+            "domain": {"data": "table", "field": "team"},
+            "range": "width",
+            "padding": 0.3
+          },
+          {
+            "name": "y",
+            "type": "linear",
+            "domain": [0, 3800000],
+            "range": "height",
+            "zero": true,
+            "nice": false
+          }
+        ],
+        "axes": [
+          {
+            "orient": "bottom",
+            "scale": "x",
+            "ticks": false,
+            "domain": true,
+            "domainColor": "#666666",
+            "labelFont": "Helvetica",
+            "labelFontSize": 12,
+            "labelColor": "#666",
+            "labelPadding": 8,
+            "title": null
+          },
+          {
+            "orient": "left",
+            "scale": "y",
+            "ticks": false,
+            "domain": false,
+            "grid": false,
+            "labelFont": "Helvetica",
+            "labelFontSize": 12,
+            "labelColor": "#666",
+            "labelPadding": 6,
+            "labelAlign": "right",
+            "values": [500000, 1000000, 1500000, 2000000, 2500000, 3000000, 3500000],
+            "encode": {
+              "labels": {
+                "update": {
+                  "text": {
+                    "signal": "datum.value === 0 ? '' : '$' + format(datum.value / 1000000, '.1f') + 'M'"
+                  },
+                  "fill": {"value": "#666"},
+                  "font": {"value": "Helvetica"},
+                  "fontSize": {"value": 12}
+                }
+              }
+            },
+            "title": "ANNUAL CAP ALLOCATION PER TEAM",
+            "titleAlign": "left",
+            "titleAngle": 0,
+            "titleX": -52,
+            "titleY": -16,
+            "titleFontSize": 12,
+            "titleFont": "Helvetica",
+            "titleColor": "#333"
+          }
+        ],
+        "marks": [
+          {
+            "type": "rect",
+            "from": {"data": "table"},
+            "encode": {
+              "enter": {
+                "xc": {"signal": "scale('x', datum.team) + bandwidth('x') / 2"},
+                "width": {"value": 38},
+                "y": {"scale": "y", "field": "adjAlloc"},
+                "y2": {"scale": "y", "value": 0},
+                "fill": {"value": "#a4b5ff"},
+                "tooltip": {
+                  "signal": "{'Team': datum.team, 'Adjusted allocations': '$' + format(datum.adjAlloc, ',.0f'), 'Total cap allocations': '$' + format(datum.capAlloc, ',.0f')}"
+                }
+              },
+              "hover": {"fill": {"value": "#8fa8f5"}},
+              "update": {"fill": {"value": "#a4b5ff"}}
+            }
+          },
+          {
+            "type": "rect",
+            "from": {"data": "table"},
+            "encode": {
+              "enter": {
+                "xc": {"signal": "scale('x', datum.team) + bandwidth('x') / 2"},
+                "width": {"value": 22},
+                "y": {"scale": "y", "field": "capAlloc"},
+                "y2": {"scale": "y", "value": 0},
+                "fill": {"value": "#6173c3"},
+                "tooltip": {
+                  "signal": "{'Team': datum.team, 'Adjusted allocations': '$' + format(datum.adjAlloc, ',.0f'), 'Total cap allocations': '$' + format(datum.capAlloc, ',.0f')}"
+                }
+              },
+              "hover": {"fill": {"value": "#4a5aaa"}},
+              "update": {"fill": {"value": "#6173c3"}}
+            }
+          },
+          {
+            "type": "rule",
+            "from": {"data": "caps"},
+            "encode": {
+              "enter": {
+                "x": {"value": 0},
+                "x2": {"signal": "width"},
+                "y": {"scale": "y", "field": "cap"},
+                "stroke": {"field": "color"},
+                "strokeWidth": {"value": 1.5},
+                "strokeDash": {"value": [6, 4]}
+              }
+            }
+          },
+          {
+            "type": "text",
+            "from": {"data": "caps"},
+            "encode": {
+              "enter": {
+                "x": {"signal": "width - 4"},
+                "y": {"scale": "y", "field": "cap", "offset": -6},
+                "text": {"field": "label"},
+                "font": {"value": "Helvetica"},
+                "fontSize": {"value": 10},
+                "fill": {"field": "color"},
+                "align": {"value": "right"},
+                "baseline": {"value": "bottom"}
+              }
+            }
+          },
+          {
+            "type": "rect",
+            "from": {"data": "legend"},
+            "encode": {
+              "enter": {
+                "x": {"field": "x"},
+                "y": {"value": 430},
+                "width": {"value": 12},
+                "height": {"value": 12},
+                "fill": {"field": "color"}
+              }
+            }
+          },
+          {
+            "type": "text",
+            "from": {"data": "legend"},
+            "encode": {
+              "enter": {
+                "x": {"signal": "datum.x + 16"},
+                "y": {"value": 436},
+                "text": {"field": "label"},
+                "font": {"value": "Helvetica"},
+                "fontSize": {"value": 11},
+                "fill": {"value": "#444"},
+                "baseline": {"value": "middle"}
+              }
+            }
+          }
+        ],
+        "config": {}
+      };
+  
+      vegaEmbed('#cap-allocation-chart', spec4, {mode: "vega", actions: false})
+        .then(console.log).catch(console.warn);
+    });
+  </script>
+
+  <!-- Chart 5: interactive salary by team (#team-salary-chart) -->
+  <script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const TS_DATA = {"LV":[{"name":"Jewell Loyd","salary":249032,"adj":547870},{"name":"A'ja Wilson","salary":200000,"adj":440000},{"name":"Chelsea Gray","salary":196267,"adj":431787},{"name":"Jackie Young","salary":169950,"adj":373890},{"name":"Kiah Stokes","salary":103000,"adj":226600},{"name":"Megan Gustafson","salary":96820,"adj":213004},{"name":"NaLyssa Smith","salary":91981,"adj":202358},{"name":"Dana Evans","salary":89000,"adj":195800},{"name":"Kierstan Bell","salary":84543,"adj":185995},{"name":"Cheyenne Parker-Tyus","salary":78831,"adj":173428},{"name":"Aaliyah Nye","salary":69267,"adj":152387}],"DAL":[{"name":"Arike Ogunbowale","salary":249032,"adj":547870},{"name":"Myisha Hines-Allen","salary":203000,"adj":446600},{"name":"Tyasha Harris","salary":100013,"adj":220029},{"name":"Maddy Siegrist","salary":83371,"adj":183416},{"name":"Diamond Miller","salary":83371,"adj":183416},{"name":"Paige Bueckers","salary":78831,"adj":173428},{"name":"Aziaha James","salary":72455,"adj":159401},{"name":"JJ Quinerly","salary":66079,"adj":145374},{"name":"Luisa Geiselsöder","salary":66079,"adj":145374},{"name":"Li Yueru","salary":66079,"adj":145374},{"name":"Haley Jones","salary":36094,"adj":79407},{"name":"Grace Berger","salary":17214,"adj":37871},{"name":"Amy Okonkwo","salary":2915,"adj":6413},{"name":"Ajae Petty","salary":1250,"adj":2750},{"name":"Christyn Williams","salary":833,"adj":1833}],"MIN":[{"name":"Napheesa Collier","salary":214284,"adj":471425},{"name":"Kayla McBride","salary":205000,"adj":451000},{"name":"DiJonai Carrington","salary":200000,"adj":440000},{"name":"Courtney Williams","salary":180000,"adj":396000},{"name":"Alanna Smith","salary":150000,"adj":330000},{"name":"Natisha Hiedeman","salary":135000,"adj":297000},{"name":"Bridget Carleton","salary":125000,"adj":275000},{"name":"Jessica Shepard","salary":78831,"adj":173428},{"name":"Anastasiia Olairi Kosu","salary":69267,"adj":152387},{"name":"Maria Kliundikova","salary":54418,"adj":119720},{"name":"Jaylyn Sherrod","salary":18880,"adj":41536},{"name":"Camryn Taylor","salary":7949,"adj":17488}],"PHX":[{"name":"Kahleah Copper","salary":248134,"adj":545895},{"name":"Satou Sabally","salary":215000,"adj":473000},{"name":"Alyssa Thomas","salary":215000,"adj":473000},{"name":"Kalani Brown","salary":120000,"adj":264000},{"name":"Sami Whitcomb","salary":125000,"adj":275000},{"name":"Natasha Mack","salary":116079,"adj":255374},{"name":"Kitija Laksa","salary":80000,"adj":176000},{"name":"Monique Akoa Makani","salary":66079,"adj":145374},{"name":"Lexi Held","salary":66079,"adj":145374},{"name":"Kathryn Westbeld","salary":66079,"adj":145374},{"name":"DeWanna Bonner","salary":63721,"adj":140186},{"name":"Kiana Williams","salary":12772,"adj":28098}],"ATL":[{"name":"Brittney Griner","salary":214466,"adj":471825},{"name":"Brionna Jones","salary":214466,"adj":471825},{"name":"Jordin Canada","salary":190000,"adj":418000},{"name":"Allisha Gray","salary":190000,"adj":418000},{"name":"Nia Coffey","salary":150000,"adj":330000},{"name":"Shatori Walker-Kimbrough","salary":150000,"adj":330000},{"name":"Rhyne Howard","salary":91981,"adj":202358},{"name":"Naz Hillmon","salary":80823,"adj":177811},{"name":"Te-Hina Paopao","salary":69267,"adj":152387},{"name":"Maya Caldwell","salary":66079,"adj":145374},{"name":"Taylor Thierry","salary":66079,"adj":145374},{"name":"Sika Koné","salary":15548,"adj":34206}],"NY":[{"name":"Breanna Stewart","salary":222400,"adj":489280},{"name":"Sabrina Ionescu","salary":222060,"adj":488532},{"name":"Jonquel Jones","salary":209000,"adj":459800},{"name":"Natasha Cloud","salary":200000,"adj":440000},{"name":"Nyara Sabally","salary":79999,"adj":175998},{"name":"Kennedy Burke","salary":78831,"adj":173428},{"name":"Isabelle Harrison","salary":78831,"adj":173428},{"name":"Emma Meesseman","salary":75694,"adj":166527},{"name":"Leonie Fiebich","salary":68595,"adj":150909},{"name":"Rebekah Gardner","salary":66079,"adj":145374},{"name":"Marine Johannès","salary":66079,"adj":145374},{"name":"Stephanie Talbot","salary":35110,"adj":77242}],"IND":[{"name":"Kelsey Mitchell","salary":269244,"adj":592337},{"name":"Natasha Howard","salary":214466,"adj":471825},{"name":"Sophie Cunningham","salary":100000,"adj":220000},{"name":"Damiris Dantas","salary":100000,"adj":220000},{"name":"Sydney Colson","salary":90000,"adj":198000},{"name":"Lexie Hull","salary":88261,"adj":194174},{"name":"Brianna Turner","salary":85000,"adj":187000},{"name":"Aliyah Boston","salary":83371,"adj":183416},{"name":"Caitlin Clark","salary":78066,"adj":171745},{"name":"Makayla Timpson","salary":69267,"adj":152387},{"name":"Aari McDonald","salary":52333,"adj":115133},{"name":"Chloe Bibby","salary":23322,"adj":51308},{"name":"Odyssey Sims","salary":7949,"adj":17488},{"name":"Bree Hall","salary":4442,"adj":9772},{"name":"Aerial Powers","salary":3975,"adj":8745},{"name":"Shey Peddy","salary":1987,"adj":4371}],"LA":[{"name":"Dearica Hamby","salary":202000,"adj":444400},{"name":"Kelsey Plum","salary":202000,"adj":444400},{"name":"Azurá Stevens","salary":195000,"adj":429000},{"name":"Rae Burrell","salary":137500,"adj":302500},{"name":"Emma Cannon","salary":116331,"adj":255928},{"name":"Julie Allemand","salary":85000,"adj":187000},{"name":"Cameron Brink","salary":78066,"adj":171745},{"name":"Rickea Jackson","salary":78066,"adj":171745},{"name":"Sarah Ashlee Barker","salary":72455,"adj":159401},{"name":"Sania Feagin","salary":69267,"adj":152387},{"name":"Julie Vanloo","salary":66079,"adj":145374},{"name":"Alissa Pili","salary":10550,"adj":23210}],"CHI":[{"name":"Ariel Atkins","salary":223000,"adj":490600},{"name":"Courtney Vandersloot","salary":185000,"adj":407000},{"name":"Rebecca Allen","salary":160000,"adj":352000},{"name":"Kia Nurse","salary":145000,"adj":319000},{"name":"Michaela Onyenwere","salary":125000,"adj":275000},{"name":"Elizabeth Williams","salary":100000,"adj":220000},{"name":"Rachel Banham","salary":95000,"adj":209000},{"name":"Kamilla Cardoso","salary":78066,"adj":171745},{"name":"Angel Reese","salary":74909,"adj":164800},{"name":"Hailey Van Lith","salary":72455,"adj":159401},{"name":"Maddy Westbeld","salary":69267,"adj":152387},{"name":"Sevgi Uzun","salary":25543,"adj":56195}],"SEA":[{"name":"Gabby Williams","salary":225000,"adj":495000},{"name":"Skylar Diggins","salary":214466,"adj":471825},{"name":"Nneka Ogwumike","salary":195000,"adj":429000},{"name":"Brittney Sykes","salary":195000,"adj":429000},{"name":"Ezi Magbegor","salary":186000,"adj":409200},{"name":"Lexie Brown","salary":96408,"adj":212098},{"name":"Katie Lou Samuelson","salary":90000,"adj":198000},{"name":"Dominique Malonga","salary":78831,"adj":173428},{"name":"Erica Wheeler","salary":78831,"adj":173428},{"name":"Mackenzie Holmes","salary":48865,"adj":107503},{"name":"Tiffany Mitchell","salary":42397,"adj":93273},{"name":"Zia Cooke","salary":13882,"adj":30540}],"CON":[{"name":"Marina Mabrey","salary":210000,"adj":462000},{"name":"Tina Charles","salary":170000,"adj":374000},{"name":"Lindsay Allen","salary":90000,"adj":198000},{"name":"Olivia Nelson-Ododa","salary":80823,"adj":177811},{"name":"Bria Hartley","salary":78831,"adj":173428},{"name":"Aneesah Morrow","salary":75643,"adj":166415},{"name":"Saniya Rivers","salary":75643,"adj":166415},{"name":"Aaliyah Edwards","salary":74909,"adj":164800},{"name":"Leila Lacan","salary":72455,"adj":159401},{"name":"Rayah Marshall","salary":69267,"adj":152387},{"name":"Haley Peters","salary":25173,"adj":55381},{"name":"Mamignan Touré","salary":17769,"adj":39092}],"GS":[{"name":"Tiffany Hayes","salary":200000,"adj":440000},{"name":"Kayla Thornton","salary":132000,"adj":290400},{"name":"Monique Billings","salary":110000,"adj":242000},{"name":"Veronica Burton","salary":103831,"adj":228428},{"name":"Cecilia Zandalasini","salary":100000,"adj":220000},{"name":"Temi Fagbenle","salary":90000,"adj":198000},{"name":"Carla Leite","salary":72455,"adj":159401},{"name":"Kate Martin","salary":68595,"adj":150909},{"name":"Janelle Salaün","salary":66079,"adj":145374},{"name":"Laeticia Amihere","salary":53307,"adj":117275},{"name":"Kaitlyn Chen","salary":49420,"adj":108724},{"name":"Iliana Rupert","salary":32207,"adj":70855},{"name":"Kaila Charles","salary":13911,"adj":30604}],"WAS":[{"name":"Alysha Clark","salary":205908,"adj":452998},{"name":"Stefanie Dolson","salary":170000,"adj":374000},{"name":"Sug Sutton","salary":93831,"adj":206428},{"name":"Shakira Austin","salary":91981,"adj":202358},{"name":"Emily Engstler","salary":81079,"adj":178374},{"name":"Sonia Citron","salary":78831,"adj":173428},{"name":"Kiki Iriafen","salary":78831,"adj":173428},{"name":"Georgia Amoore","salary":75643,"adj":166415},{"name":"Jacy Sheldon","salary":74909,"adj":164800},{"name":"Lucy Olsen","salary":69267,"adj":152387},{"name":"Jade Melbourne","salary":66710,"adj":146762},{"name":"Madison Scott","salary":4442,"adj":9772}]};
+    const TS_TEAMS = {LV:"Las Vegas Aces",DAL:"Dallas Wings",MIN:"Minnesota Lynx",PHX:"Phoenix Mercury",ATL:"Atlanta Dream",NY:"New York Liberty",IND:"Indiana Fever",LA:"Los Angeles Sparks",CHI:"Chicago Sky",SEA:"Seattle Storm",CON:"Connecticut Sun",GS:"Golden State Valkyries",WAS:"Washington Mystics"};
+    const TS_ORDER = ["LV","DAL","MIN","PHX","ATL","NY","IND","LA","CHI","SEA","CON","GS","WAS"];
+    const TS_LIGHT = "#b6bbf0", TS_DARK = "#494e9e", TS_MUTED = "#6a6a6a", TS_INK = "#111111";
+
+    function tsSpec(abbr){
+      const rows = TS_DATA[abbr].slice().sort((a,b)=>b.adj-a.adj);
+      const names = rows.map(r=>r.name);
+      return {
+        $schema: "https://vega.github.io/schema/vega-lite/v5.json",
+        background: "transparent",
+        data: { values: rows },
+        width: 520,
+        height: rows.length * 30,
+        autosize: { type: "none" },
+        padding: { left: 180, top: 25, right: 20, bottom: 0 },
+        encoding: {
+          y: { field: "name", type: "nominal", sort: names,
+               axis: { title: null, labelFontSize: 13, labelColor: TS_INK,
+                       labelFont: "Helvetica", domain: false, ticks: false, labelPadding: 8, labelLimit: 195 } }
+        },
+        layer: [
+          { mark: { type: "bar", color: "#a4b5ff", height: { band: 0.78 } },
+            params: [{ name: "hover", select: { type: "point", fields: ["name"], on: "pointerover", clear: "pointerout" } }],
+            encoding: {
+              x: { field: "adj", type: "quantitative", scale: { domain: [0, 650000] },
+                   axis: { orient: "top", title: null, format: "$~s", grid: false, gridColor: "#ededed",
+                           domain: false, ticks: false, labelFontSize: 12, labelColor: TS_MUTED, labelFont: "Helvetica" } },
+              opacity: { condition: { param: "hover", value: 1 }, value: 0.15 },
+              tooltip: [
+                { field: "name", title: "Player" },
+                { field: "adj", title: "Adjusted Salary", format: "$,.0f" },
+                { field: "salary", title: "Current salary", format: "$,.0f" },
+              ]
+            } },
+          { mark: { type: "bar", color: "#6173c3", height: { band: 0.42 } },
+            encoding: {
+              x: { field: "salary", type: "quantitative", scale: { domain: [0, 650000] } },
+              opacity: { condition: { param: "hover", value: 1 }, value: 0.15 },
+              tooltip: [
+                { field: "name", title: "Player" },
+                { field: "adj", title: "Adjusted Salary", format: "$,.0f" },
+                { field: "salary", title: "Current salary", format: "$,.0f" }
+              ]
+            } }
+        ],
+        config: { view: { stroke: null }, axis: { labelFontWeight: 400 } }
+      };
+    }
+
+    function tsRender(abbr){
+      vegaEmbed('#team-salary-chart', tsSpec(abbr), { actions: false, renderer: 'svg' })
+        .catch(err => {
+          document.getElementById('team-salary-chart').innerHTML =
+            '<p class="ts-err">Chart failed to draw: ' + err.message + '</p>';
+        });
+    }
+
+    const tsSel = document.getElementById('teamSelect');
+    TS_ORDER.forEach(a => {
+      const o = document.createElement('option');
+      o.value = a; o.textContent = TS_TEAMS[a];
+      tsSel.appendChild(o);
+    });
+    let tsCurrent = "MIN";
+    tsSel.value = tsCurrent;
+    tsSel.addEventListener('change', e => tsRender(e.target.value));
+    tsRender(tsCurrent);
+  });
+  </script>
+
+  <!-- Rookie contract scale (100-square grid) script -->
+  <script>
+  (function () {
+    const NBA = 57100000, CLARK = 338000;
+    const TILE = NBA / 100;                 // ≈ $571K
+    const FRAC = CLARK / TILE;              // ≈ 0.59
+    const fmtUSD = n => '$' + Math.round(n).toLocaleString('en-US');
+
+    const COLS = 10, ROWS = 10, SIZE = 46, GAP = 6, cell = SIZE + GAP;
+    const GX = 40, GY = 34;
+    const NS = 'http://www.w3.org/2000/svg';
+    const svg = document.getElementById('grid');
+    const xOf = c => GX + c * cell;
+    const yOf = r => GY + (ROWS - 1 - r) * cell;
+
+    let tiles = [], clarkFill, clarkOutline, annoLine, nbaLbl, clarkLbl, clarkSub, unitLbl;
+
+    function build() {
+      svg.innerHTML = ''; tiles = [];
+
+      const gridCx = (xOf(0) + xOf(COLS - 1) + SIZE) / 2;
+      nbaLbl = mkText('lbl lbl-nba', gridCx, GY - 16, 'Risacher: $0', 'middle');
+
+      // 100 grey squares (with a quiet running-total tooltip for the curious)
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+          const t = document.createElementNS(NS, 'rect');
+          t.setAttribute('class', 'tile');
+          t.setAttribute('x', xOf(c)); t.setAttribute('y', yOf(r));
+          t.setAttribute('width', SIZE); t.setAttribute('height', SIZE); t.setAttribute('rx', 3);
+          const idx = r * COLS + c + 1;
+          t.innerHTML = '<title>' + fmtUSD(idx * TILE) + ' of Risacher\'s deal</title>';
+          svg.appendChild(t);
+          tiles.push({ el: t, order: r * COLS + c });
+        }
+      }
+
+      // subtle unit cue near the top-right square
+      const trc = xOf(COLS - 1) + SIZE / 2;
+      unitLbl = mkText('lbl lbl-unit', trc, GY - 16, '1 square ≈ $571K', 'middle');
+
+      // Clark — bottom-left square, filled 59% from the bottom
+      const cx = xOf(0), cy = yOf(0), fillH = SIZE * FRAC;
+      clarkOutline = mkRect('clark-outline', cx, cy, SIZE, SIZE);
+      svg.appendChild(clarkOutline);
+      clarkFill = mkRect('clark-fill', cx, cy + (SIZE - fillH), SIZE, fillH);
+      clarkFill.innerHTML = '<title>Caitlin Clark — ' + fmtUSD(CLARK) + ' (59% of one square)</title>';
+      svg.appendChild(clarkFill);
+
+      // short leader from the square to its label
+      const lx = cx + SIZE / 2, lyTop = cy + SIZE, lyBot = cy + SIZE + 18;
+      annoLine = document.createElementNS(NS, 'path');
+      annoLine.setAttribute('class', 'anno-line');
+      annoLine.setAttribute('d', 'M' + lx + ' ' + lyTop + ' L' + lx + ' ' + lyBot);
+      svg.appendChild(annoLine);
+
+      clarkLbl = mkText('lbl lbl-wnba', cx, lyBot + 18, 'Clark: $338K', 'start');
+      clarkSub = mkText('lbl lbl-sub',  cx, lyBot + 36, '59% of one square', 'start');
+    }
+
+    function mkRect(cls, x, y, w, h) {
+      const r = document.createElementNS(NS, 'rect');
+      r.setAttribute('class', cls);
+      r.setAttribute('x', x); r.setAttribute('y', y);
+      r.setAttribute('width', w); r.setAttribute('height', h); r.setAttribute('rx', 3);
+      return r;
+    }
+    function mkText(cls, x, y, str, anchor) {
+      const t = document.createElementNS(NS, 'text');
+      t.setAttribute('class', cls); t.setAttribute('x', x); t.setAttribute('y', y);
+      t.setAttribute('text-anchor', anchor); t.textContent = str;
+      svg.appendChild(t); return t;
+    }
+
+    let timers = [];
+    function play() {
+      timers.forEach(clearTimeout); timers = [];
+      tiles.forEach(t => t.el.classList.remove('show'));
+      [clarkFill, clarkOutline, annoLine, nbaLbl, clarkLbl, clarkSub, unitLbl].forEach(e => e.classList.remove('show'));
+      nbaLbl.textContent = 'Risacher: $0';
+      nbaLbl.classList.add('show');
+
+      const span = 1400, per = span / tiles.length;
+      tiles.sort((a, b) => a.order - b.order)
+           .forEach((t, i) => timers.push(setTimeout(() => t.el.classList.add('show'), i * per)));
+
+      const start = performance.now();
+      (function tick(now) {
+        const p = Math.min((now - start) / (span + 200), 1);
+        const v = NBA * (1 - Math.pow(1 - p, 3));
+        nbaLbl.textContent = 'Risacher: $' + (v / 1e6).toFixed(1) + 'M';
+        if (p < 1) requestAnimationFrame(tick); else nbaLbl.textContent = 'Risacher: $57.1M';
+      })(start);
+
+      timers.push(setTimeout(() => unitLbl.classList.add('show'), span * 0.6));
+      timers.push(setTimeout(() => {
+        clarkOutline.classList.add('show');
+        clarkFill.classList.add('show');
+        annoLine.classList.add('show');
+        clarkLbl.classList.add('show');
+        clarkSub.classList.add('show');
+      }, span + 300));
+    }
+
+    build();
+    const io = new IntersectionObserver((es) => {
+      es.forEach(e => { if (e.isIntersecting) { play(); io.disconnect(); } });
+    }, { threshold: 0.3 });
+    io.observe(document.getElementById('rcs'));
+    document.getElementById('rcsReplay').addEventListener('click', play);
+  })();
+  </script>
+</body>
+</html>
