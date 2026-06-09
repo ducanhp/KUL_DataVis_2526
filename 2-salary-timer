@@ -14,7 +14,7 @@
       "data": [{
         "name": "leagues",
         "values": [
-          { "league": "WNBA Median", "time": 64.96, "x": w*0.25, "color": "#9AAEFF" },
+          { "league": "WNBA Median", "time": 64.96, "x": w*0.25, "color": "#6173c3" },
           { "league": "NBA Median",  "time": 1.4,   "x": w*0.75, "color": "#D6D6D6" }
         ],
         "transform": [
