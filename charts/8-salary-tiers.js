@@ -82,7 +82,7 @@
           "ticks":false,"domain":false,"grid":false,"gridColor":"#eeeeee","gridWidth":1,
           "labelFont":"Helvetica","labelAlign":"left","labelPadding":52,
           "labelFontSize":12,"labelColor":"#666",
-          "values":[0,5,10,15,20,25,30,35],
+          "values":[5,10,15,20,25,30,35],
           "encode":{"labels":{"update":{"text":{"signal":"datum.value+'%'"},"align":{"value":"left"},"fill":{"value":"#666"},"font":{"value":"Helvetica"},"fontSize":{"value":12}}}},
           "title":"MAXIMUM PAY AS A SHARE OF THE LEAGUE SALARY CAP",
           "titleAlign":"left","titleAngle":0,"titleX":-52,"titleY":-2,
